@@ -1,0 +1,7 @@
+﻿node_modules/
+*.log
+push_to_github.js
+package-lock.json
+package.json
+reiod_locker_website_brief.md
+text.mdm

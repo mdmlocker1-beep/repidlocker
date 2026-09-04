@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Disallow placeholder/internal folders
+Disallow: /assets/screenshots/
+
+# Sitemap location
+Sitemap: https://www.reiodlocker.com/sitemap.xml

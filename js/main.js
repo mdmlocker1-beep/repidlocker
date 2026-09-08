@@ -107,12 +107,18 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---- Lightbox ---- */
   const lightbox = document.querySelector('.lightbox');
   const lightboxImg = document.querySelector('.lightbox-img');
+  const lightboxCaption = document.querySelector('.lightbox-caption');
 
-  document.querySelectorAll('.gallery-item[data-src]').forEach(item => {
+  document.querySelectorAll('.gallery-item[data-img]').forEach(item => {
     item.addEventListener('click', () => {
-      if (lightboxImg) lightboxImg.src = item.getAttribute('data-src');
+      if (lightboxImg) lightboxImg.src = item.getAttribute('data-img');
+      if (lightboxCaption) lightboxCaption.textContent = item.getAttribute('data-caption') || '';
       lightbox?.classList.add('active');
       document.body.style.overflow = 'hidden';
+    });
+    /* Keyboard accessibility */
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.click(); }
     });
   });
 
@@ -182,6 +188,70 @@ document.addEventListener('DOMContentLoaded', () => {
       link.style.background = link.getAttribute('href') === '#' + current ? 'var(--light-green)' : '';
       link.style.color = link.getAttribute('href') === '#' + current ? 'var(--primary-dark)' : '';
     });
+  });
+
+  /* ---- Contact form → Web3Forms ---- */
+  const contactForm = document.getElementById('contact-form');
+  const contactFeedback = document.getElementById('contact-feedback');
+
+  contactForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('contact-submit-btn');
+
+    // Update subject hidden field from the select
+    const topicSel = document.getElementById('cf-subject-sel');
+    const subjectHidden = document.getElementById('cf-subject-hidden');
+    if (topicSel && subjectHidden) {
+      subjectHidden.value = topicSel.value
+        ? `Reiod Locker – ${topicSel.value}`
+        : 'Reiod Locker – New Contact Form Submission';
+    }
+
+    // Loading state
+    const origText = btn.innerHTML;
+    btn.innerHTML = '⏳ Sending...';
+    btn.disabled = true;
+    if (contactFeedback) contactFeedback.style.display = 'none';
+
+    try {
+      const formData = new FormData(contactForm);
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        if (contactFeedback) {
+          contactFeedback.style.display = 'block';
+          contactFeedback.style.background = '#EAF8E5';
+          contactFeedback.style.color = '#168A00';
+          contactFeedback.style.border = '1.5px solid #C5EDBA';
+          contactFeedback.innerHTML = '✅ Message sent successfully! We\'ll get back to you soon.';
+        }
+        contactForm.reset();
+        btn.innerHTML = '✅ Sent!';
+        btn.style.background = '#168A00';
+        setTimeout(() => {
+          btn.innerHTML = origText;
+          btn.disabled = false;
+          btn.style.background = '';
+          if (contactFeedback) contactFeedback.style.display = 'none';
+        }, 5000);
+      } else {
+        throw new Error(data.message || 'Submission failed');
+      }
+    } catch (err) {
+      if (contactFeedback) {
+        contactFeedback.style.display = 'block';
+        contactFeedback.style.background = '#FEF2F2';
+        contactFeedback.style.color = '#DC2626';
+        contactFeedback.style.border = '1.5px solid #FECACA';
+        contactFeedback.innerHTML = '❌ Something went wrong. Please try again or contact us on WhatsApp.';
+      }
+      btn.innerHTML = origText;
+      btn.disabled = false;
+    }
   });
 
   /* ---- Year in footer ---- */
